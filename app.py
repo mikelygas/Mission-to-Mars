@@ -5,13 +5,12 @@
 def scrape():
     scrape_dict = {}
 
-    # Declare Dependencies 
+    # Declare Dependencies
     from bs4 import BeautifulSoup
     from splinter import Browser
     import pandas as pd
     import requests
     import requests_html
-    
 
 
     # In[2]:
@@ -20,8 +19,7 @@ def scrape():
     #Scrape the NASA Mars News Site and collect the latest News Title and Paragraph Text. Assign the text to variables that you can reference later.
     from splinter import Browser
     executable_path = {"executable_path": "chromedriver.exe"}
-    browser = Browser("chrome", **executable_path, headless=False)
-        
+    browser = Browser("chrome", **executable_path, headless=True)
     url = 'https://mars.nasa.gov/news/'
     browser.visit(url)
     news = browser.find_by_css("li.slide div.content_title a").first.text
@@ -49,11 +47,9 @@ def scrape():
 
     url = "https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars"
     browser.visit(url)
-    pic = browser.find_by_css("div.carousel_items article.carousel_item").first["style"].strip()
-    print(pic)
+    pic = browser.find_by_css("div.carousel_items article.carousel_item").first["style"].lstrip("background-image: url(\"").rstrip("\");")
+    pic = "https://www.jpl.nasa.gov/"+pic
     browser.quit()
-        
-        
 
 
     # In[4]:
@@ -64,9 +60,9 @@ def scrape():
     # Example:
     #mars_weather = 'Sol 1801 (Aug 30, 2017), Sunny, high -21C/-5F, low -80C/-112F, pressure at 8.82 hPa, daylight 06:09-17:55'
     res = requests.get('https://twitter.com/marswxreport?lang=en')
-    soup = BeautifulSoup(res.text)
-    tweet = soup.find(class_='js-tweet-text-container')
-    print(tweet.text)
+    soup = BeautifulSoup(res.content)
+    tweet = soup.select_one('.js-tweet-text-container').text
+
 
 
     # In[5]:
@@ -78,13 +74,13 @@ def scrape():
     res = requests.get('https://space-facts.com/mars/')
     soup = BeautifulSoup(res.text)
     mytab = pd.read_html(str(soup.find(id='tablepress-mars')))[0]
-    mytab
+   # mytab
 
 
     # In[6]:
 
 
-    print(mytab.to_html())
+    df = mytab.to_html()
 
 
     # In[7]:
@@ -117,26 +113,19 @@ def scrape():
         pageurl = 'https://astrogeology.usgs.gov'+item.get("href")
         #pageurl = 'https://astrogeology.usgs.gov'+title.find('a').get('href')
         title = item.find('h3').text
-        
         res = requests.get(pageurl)
-        url = BeautifulSoup(res.text).find(class_='downloads').find_all('a')[1].get('href')
+        url = BeautifulSoup(res.text).find(class_='downloads').find_all('a')[0].get('href')
         hemisphere_image_urls.append({'title': title, 'img_url': url})
-    hemisphere_image_urls    
-    
 
 
     # In[ ]:
-   
-    scrape_dict.update({'featured_img_url':pic, "hemisphere_image_urls":hemisphere_image_urls})
+    scrape_dict.update({'twitter':tweet,'featured_img_url':pic, 'dfhtml':df, 'newsfeed':news, 'newsparagraph':news_p, "hemisphere_image_urls":hemisphere_image_urls})
     return scrape_dict
 
 
 from flask import Flask, render_template
 import pymongo
-conn = 'mongodb://localhost:27017'
-client = pymongo.MongoClient(conn)
-db = client["mars"]
-db["mars"]
+
 # create instance of Flask app
 app = Flask(__name__)
 
@@ -144,12 +133,27 @@ app = Flask(__name__)
 # create route that renders index.html template
 @app.route("/")
 def echo():
-
-    return render_template("index.html")
+    conn = 'mongodb://localhost:27017'
+    client = pymongo.MongoClient(conn)
+    db = client["mars"]
+    mycol = db["mars"]
+    data = mycol.find_one()
+    return render_template("index.html",data=data)
 
 
 # Bonus add a new route
 @app.route("/scrape")
 def scrape_data():
+    conn = 'mongodb://localhost:27017'
+    client = pymongo.MongoClient(conn)
+    db = client["mars"]
+    #db["mars"]
+    # If collection music exists, drop it so the new top 10 information will replace it
+    db.mars.drop()
 
-    return scrape()
+
+    # #Create new empty music-albums collection
+    db.create_collection("mars")
+    mycol = db["mars"]
+    mycol.insert_one(scrape())
+    return ("", 204)

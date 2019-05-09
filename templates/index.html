@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Mars</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+
+<body>
+   
+ <p>Mars</p>
+    <br>
+    <br>
+    <br>
+    <h2>Mars Weather</h2>
+    <p>{{ data.twitter }}</p>
+    <h2>Mars News</h2>
+    <p>{{ data.newsparagraph }}</p>
+    <p>{{ data.dfhtml|safe }}</p>
+    <h2>Featured Image</h2>
+<img src="{{ data.featured_img_url }}" style="width:600px;" alt="">
+<table>
+  <tr><td>
+<img src="{{ data.hemisphere_image_urls[0].img_url }}" style="width:400px;" alt="">{{data.hemisphere_image_urls[0].title }}
+  </td><td>
+<img src="{{ data.hemisphere_image_urls[1].img_url }}" style="width:400px;" alt="">{{data.hemisphere_image_urls[1].title }}
+  </td>
+  </tr>
+  <tr><td>
+<img src="{{ data.hemisphere_image_urls[2].img_url }}" style="width:400px;" alt="">{{data.hemisphere_image_urls[2].title }}
+  </td><td>
+<img src="{{ data.hemisphere_image_urls[3].img_url }}" style="width:400px;" alt="">{{data.hemisphere_image_urls[3].title }}
+  </td>
+  </tr>
+</table>
+
+  </div>
+</body>
+
+</html>
