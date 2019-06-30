@@ -148,12 +148,15 @@ def scrape_data():
     client = pymongo.MongoClient(conn)
     db = client["mars"]
     #db["mars"]
-    # If collection music exists, drop it so the new top 10 information will replace it
+    # If collection mars exists, drop it so the new top 10 information will replace it
     db.mars.drop()
 
 
-    # #Create new empty music-albums collection
+    # #Create new empty mars collection
     db.create_collection("mars")
     mycol = db["mars"]
     mycol.insert_one(scrape())
     return ("", 204)
+
+if __name__ == "__main__":
+   app.run(debug=True)
